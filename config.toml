@@ -1,0 +1,35 @@
+# The URL the site will be built for
+base_url = "https://example.com"
+
+# Whether to automatically compile all Sass files in the sass directory
+compile_sass = true
+
+# Whether to build a search index to be used later on by a JavaScript library
+build_search_index = true
+
+[build.environment]
+# Set the version name that you want to use and Netlify will automatically use it.
+ZOLA_VERSION = "0.19.2"
+
+[build]
+# This assumes that the Zola site is in a docs folder. If it isn't, you don't need
+# to have a `base` variable but you do need the `publish` and `command` variables.
+base    = "docs"
+publish = "docs/public"
+command = "zola build"
+
+# The magic for deploying previews of branches.
+# We need to override the base url with whatever url Netlify assigns to our
+# preview site.  We do this using the Netlify environment variable
+# `$DEPLOY_PRIME_URL`.
+
+[context.deploy-preview]
+command = "zola build --base-url $DEPLOY_PRIME_URL"
+
+[markdown]
+# Whether to do syntax highlighting
+# Theme can be customised by setting the `highlight_theme` variable to a theme supported by Zola
+highlight_code = true
+
+[extra]
+# Put all your custom variables here
