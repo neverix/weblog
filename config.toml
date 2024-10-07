@@ -12,6 +12,7 @@ theme = "tabi"
 title = "neverix"
 taxonomies = [{name = "tags", feed = true}]
 
+ignored_content = ["*.qmd", "*.ipynb"]
 
 [markdown]
 # Whether to do syntax highlighting

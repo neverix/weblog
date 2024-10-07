@@ -1,0 +1,30 @@
++++
+title = "Weird things with Bayes"
+date = 2024-10-06
+description = "Does this work?"
++++
+
+You would not expect this:
+
+```{python}
+#| label: update-weird
+#| fig-cap: "A line plot on a polar axis"
+
+from matplotlib import pyplot as plt
+import numpy as np
+prior = np.asarray([10, 2, 3, 3])
+prior = prior / prior.sum()
+update = np.asarray([0.9, 0.98, 0.97, 0.975])
+k = np.arange(200)
+unnorm = prior * np.power(update[None, :], k[:, None])
+norm = unnorm / unnorm.sum(axis=-1, keepdims=True)
+nll = -np.log(norm)
+plt.plot(nll)
+plt.xscale("log")
+plt.yscale("log")
+plt.xlabel("Time")
+plt.ylabel("NLL")
+plt.show()
+```
+
+This is it!
