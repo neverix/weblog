@@ -14,6 +14,8 @@ quartos: $(QMD_OUT_FILES)
 
 %.quarto.md: %.qmd
 	quarto render $< --to hugo
+	ls
+	ls $(shell dirname $@)
 	mv $*.md $*.quarto.md
 	static_name=$(shell basename $*)_files; \
 	static_path=static/$$static_name; \
