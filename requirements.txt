@@ -1,1 +1,4 @@
-ipykernel jupyter matplotlib numpy
+ipykernel
+jupyter
+matplotlib
+numpy
