@@ -20,7 +20,11 @@ quartos: $(QMD_OUT_FILES)
 	static_name=$(shell basename $*)_files; \
 	static_path=static/$$static_name; \
 	cp -rf $*_files $$static_path; \
-	sed -i "" -e "s/$$static_name/\/$$static_name/g" $@;
+	ifeq ($(shell uname), Darwin)
+		sed -i "" -e "s/$$static_name/\/$$static_name/g" $@;
+	else
+		sed -i -e "s/$$static_name/\/$$static_name/g" $@;
+	endif
 
 clean:
 	rm -f $(QMD_OUT_FILES)
