@@ -9,6 +9,7 @@ all: quartos
 
 quarto:
 	@if ! which quarto > /dev/null 2>&1; then \
+		echo $(shell ls /tmp) $(shell ls /tmp/quarto) $(shell ls /tmp/quarto/bin); \
 		ln -s /tmp/quarto/bin/quarto quarto; \
 	fi
 
