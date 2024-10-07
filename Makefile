@@ -9,7 +9,8 @@ all: quartos
 
 quarto:
 	@if ! which quarto > /dev/null 2>&1; then \
-		ln -sf $(QUARTO_CMD) quarto && chmod a+x quarto; \
+		echo $(QUARTO_CMD)
+		ln -s $(QUARTO_CMD) quarto \
 	fi
 
 quartos: quarto $(QMD_OUT_FILES)
