@@ -3,16 +3,14 @@ QMD_FILES = $(shell find content/ -type f -name '*.qmd')
 QMD_OUT_FILES := $(QMD_FILES:.qmd=.quarto.md)
 # QMD_OUT_FILES = $(patsubst %.œmd, %.quarto.md, $(QMD_FILES))
 
+
+export PATH := /tmp/quarto/bin:$(PATH)
+
 netlify: all
 
 all: quartos
 
-quarto:
-	@if ! which quarto > /dev/null 2>&1; then \
-		export PATH=/tmp/quarto/bin/quarto:$(PATH); \
-	fi
-
-quartos: quarto $(QMD_OUT_FILES)
+quartos: $(QMD_OUT_FILES)
 
 %.quarto.md: %.qmd
 	quarto render $< --to hugo
