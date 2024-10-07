@@ -9,7 +9,7 @@ all: quartos
 
 quarto:
 	@if ! which quarto > /dev/null 2>&1; then \
-		echo $(QUARTO_CMD)
+		echo $(QUARTO_CMD) \
 		ln -s $(QUARTO_CMD) quarto \
 	fi
 
