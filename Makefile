@@ -3,11 +3,16 @@ QMD_FILES = $(shell find content/ -type f -name '*.qmd')
 QMD_OUT_FILES := $(QMD_FILES:.qmd=.quarto.md)
 # QMD_OUT_FILES = $(patsubst %.œmd, %.quarto.md, $(QMD_FILES))
 
-netlify: all
+netlify: all quarto
 
-all: quarto
+all: quartos
 
-quarto: $(QMD_OUT_FILES)
+quarto:
+	@if ! which quarto > /dev/null 2>&1; then \
+		ln -sf $(QUARTO_CMD) quarto && chmod a+x quarto; \
+	fi
+
+quartos: $(QMD_OUT_FILES)
 
 %.quarto.md: %.qmd
 	quarto render $< --to hugo
@@ -36,4 +41,4 @@ watch:
 # 		make quarto; \
 # 	done
 
-.PHONY: quarto clean all netlify
+.PHONY: quartos clean all netlify
