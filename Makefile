@@ -3,6 +3,10 @@ QMD_FILES = $(shell find content/ -type f -name '*.qmd')
 QMD_OUT_FILES := $(QMD_FILES:.qmd=.quarto.md)
 # QMD_OUT_FILES = $(patsubst %.œmd, %.quarto.md, $(QMD_FILES))
 
+netlify: pip all
+
+pip:
+	pip install -r requirements.txt
 
 all: quarto
 
@@ -35,4 +39,4 @@ watch:
 # 		make quarto; \
 # 	done
 
-.PHONY: quarto clean all
+.PHONY: quarto clean all netlify
