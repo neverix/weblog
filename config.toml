@@ -9,7 +9,7 @@ build_search_index = true
 
 theme = "tabi"
 
-title = "neverix"
+title = "weblog"
 taxonomies = [{name = "tags", feed = true}]
 
 ignored_content = ["*.qmd", "*.ipynb"]
