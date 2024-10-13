@@ -17,6 +17,7 @@ quartos: $(QMD_OUT_FILES)
 	mv $*.md $*.quarto.md
 	static_name=$(shell basename $*)_files; \
 	static_path=static/$$static_name; \
+	rm -rf $$static_path; \
 	cp -rf $*_files $$static_path; \
 	if [ "$(shell uname)" = "Darwin" ]; then \
 		sed -i "" -e "s/$$static_name/\/$$static_name/g" $@; \

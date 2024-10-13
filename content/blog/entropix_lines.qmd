@@ -1,0 +1,155 @@
++++
+title = "Peaks in next token distributions"
+date = 2024-10-13
+description = "An intuitive explanation"
++++
+
+# Introduction
+
+On October 12th, [@doomslide](https://x.com/doomslide) from Twitter posted this image:
+
+![The mysterious tweet [(Source)](https://x.com/doomslide/status/1845137256148762952)](/entropix_scrot.png)
+
+It looks like a scaling curve of some sort with smooth deviations that are at the same locations for all language models. This seems surprising - why would models with different tokenizers of completely different sizes converge in this way?
+
+The figure plots entropy against $\log(\sqrt{\text{varentropy}}/\text{entropy})$. Given some probability over discrete outcomes (for example, probabilities of the next token in a language model), _entropy_ is the negative mean of the log likelihood and quantifies disorder in the distribution:
+
+$h(p) = \mathbb{E}_{x \sim p} [-\log p(x)]$
+
+If entropy is high, that means that, on average, we are surprised by any outcome that we see.
+
+Then, _varentropy_ is the variance of the log likelihood:
+
+$h(p) = \mathbb{E}_{x \sim p} [(\log p(x) + h(p))^2]$
+
+Intuitively, varentropy will be high if we can sample both high likelihood and low likelihood tokens.
+Note that we subtract the mean of the distribution by adding entropy because entropy is the negative mean.
+
+These quantities are the basis of [entropix](https://github.com/xjdr-alt/entropix), an autoregressive language model sampler by `@doomslide` and `@_xjdr` that's been making the rounds. The theory behind the sampler assumes that entropy and varentropy can vary independently and fall into four quadrants:
+
+![This would make a good meme template [(Source)](https://github.com/xjdr-alt/entropix)](/entropy_quadrants.png)
+
+The chart classifies the current situation (how certain is the model? how certain will it be?) and dictates how the sampler should proceed. The full details are outside the scope of the post and can be read [in the repo](https://github.com/xjdr-alt/entropix).
+
+But why would entropy and varentropy scale together in a predictable way and trade off continuously along one dimension? It seems like a mystery! Shortly after being posted, the image was shared multiple times on Twitter and got some people convinced `entropix` could be AGI.
+
+# Model
+
+Some people volunteered the explanation that the lines are caused by a small number of outcomes with probabilities very close to each other. This would indeed cause points with low varentropy and the highest entropy possible, with multiple points for each possible number of outcomes, and varying the distribution slightly would provide a continuum of lower entropies and higher varentropies, producing lines probability distributions:
+
+```{python}
+#| label: ent-varent-1  
+#| fig-cap: "Entropy-varentropy variation"
+
+from matplotlib import pyplot as plt
+import numpy as np
+for k in (3, 4, 5):
+    equal = np.full(k, 1 / k)
+    varied = np.random.standard_normal((100, k)) * 0.01 + equal
+    varied = varied / varied.sum(axis=-1, keepdims=True)
+    probs = np.concatenate((equal[None], varied), axis=0)
+    ent = -(probs * np.log(probs)).sum(-1)
+    varent = ((np.log(probs) + ent[..., None]) ** 2 * probs).sum(-1)
+    plt.scatter(ent, varent, label=f"k={k}")
+    plt.scatter(ent[:1], varent[:1], c="red", s=1)
+plt.xlabel("Entropy")
+plt.ylabel("Varentropy")
+plt.legend()
+plt.show()
+```
+
+These are the special cases that are likely the lines seen on the graph.
+
+We can plot all possible distributions (or a random subset) for comparison:
+
+```{python}
+#| label: ent-varent-2
+#| fig-cap: "Entropy-varentropy variation with other distributions"
+
+from matplotlib import pyplot as plt
+import numpy as np
+k = 5
+probs = np.exp(np.random.standard_normal((2000, k)) * 4)
+probs = probs / probs.sum(-1, keepdims=True)
+ent = -(probs * np.log(probs)).sum(-1)
+varent = ((np.log(probs) + ent[..., None]) ** 2 * probs).sum(-1)
+plt.scatter(ent, varent, label=f"everything (k=5)")
+
+for k in (2, 3, 4, 5):
+    equal = np.full(k, 1 / k)
+    varied = np.exp(np.random.standard_normal((100, k)) * 0.2 + np.log(equal))
+    
+    varied = varied / varied.sum(axis=-1, keepdims=True)
+    probs = np.concatenate((equal[None], varied), axis=0)
+    ent = -(probs * np.log(probs)).sum(-1)
+    varent = ((np.log(probs) + ent[..., None]) ** 2 * probs).sum(-1)
+    plt.scatter(ent, varent, label=f"k={k}")
+    plt.scatter(ent[:1], varent[:1], c="red", s=1)
+plt.xlabel("Entropy")
+plt.ylabel("Varentropy")
+plt.legend()
+plt.show()
+```
+
+We can see that these lines are actually just part of a weirdly shaped k-legged object. This is all from random numbers, not language models. Is it possible to explain the observed scaling law using this?
+
+![Animation showing the construction of the figure in the post](/entropy_morph.gif)
+
+We can see how each of the steps affects the original bell-like shape:
+
+1. varent -> sqrt(varent) makes the angles for the "special points" somewhat sharper.
+2. sqrt(varent) -> sqrt(varent)/ent makes the plot look like a loss plot and makes the "special points" look more important. This is because it divides by the x-axis, essentially multiplying by a hyperbola.
+3. sqrt(varent)/ent -> log(sqrt(varent)/ent) makes the singularity near x=0 look less sharp and makes the "special points" and lines meeting them stand out even more.
+
+We can conclude that the lines in the original plot appear when there is a small number of almost-equally-likely possibilities and that the scaling-like behavior is an artifact of the transformation applied to the y-axis.
+
+The actual image looks slightly different from the model with all probabilities assigned equal weight:
+
+![The first peaks stand alone, unlike in the arbitrary distribution model, where they're more similar to cusps](/entropy_first_peak.png)
+
+This means that the lines around special points we observed before have higher weight than would expected. This would make sense for language models: in text, the model is likely to guess when it is presented with a multiple choice task or has to predict a digit. Spreading probability almost-equally would be a good way to maximize likelihood and it's possible some circuit enables that behavior specifically, like with [confidence neurons](https://arxiv.org/abs/2406.16254).
+
+# Closed form
+
+Can we find the lines around "special points" without sampling small perturbations? Yes! It turns out we can get the same Pareto frontier of entropy-varentropy by continuously modifying the probability of a single option and keeping all others uniform, a sort of spike-and-slab distribution. We don't need to store all probabilities and can use high-precision arithmetic to take care of the unstable logs. This approach scales up to massive amounts of options:
+
+```{python}
+#| label: ent-varent-3
+#| fig-cap: "If you ever wondered what a language model with a septillion tokens looks like"
+
+from matplotlib import pyplot as plt
+import numpy as np
+import numpy as np
+from decimal import Decimal, getcontext
+
+plt.style.use("ggplot")
+getcontext().prec = 100
+k_values = [3, 5, 7, 9, 12, 24, 100, 1000, 10 ** 9, 10 ** 15, 10**24][:4]
+bs = int(1e2)
+
+for k in k_values:
+    k = Decimal(k)
+    ents = []
+    values = []
+    for i in range(bs):
+        x0 = Decimal(1) / Decimal(k) + (Decimal(i) / Decimal(bs)) * (Decimal(1) - Decimal(1) / Decimal(k))
+        x1_mean = (Decimal(1) - x0) / (Decimal(k) - Decimal(1))
+        probs = [x0, Decimal(1) - x0]
+        l_0 = Decimal(x0).ln()
+        l_1 = Decimal(x1_mean).ln()
+        ent = -(l_0 * probs[0] + l_1 * probs[1])
+        ents.append(ent)
+        varent = ((l_0 + ent)**2 * probs[0] + (l_1 + ent)**2 * probs[1])
+        value = (varent.sqrt() / ent).ln()
+        values.append(value)
+    ents = np.array(ents, dtype=np.float64)
+    values = np.array(values, dtype=np.float64)
+
+    plt.scatter(ents, values, label=k)
+
+plt.legend()
+plt.xlabel("entropy")
+plt.ylabel("log(sqrt(varentropy)/entropy)")
+plt.ylim(-5, np.e)
+plt.show()
+```
