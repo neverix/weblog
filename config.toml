@@ -57,3 +57,13 @@ footer_menu = [
     # {url = "sitemap.xml", name = "sitemap", trailing_slash = false},
     # {url = "https://example.com", name = "external link", trailing_slash = true},
 ]
+
+[extra.utterances]
+enabled_for_all_posts = false
+automatic_loading = true
+repo = "neverix/weblog"
+issue_term = "pathname"
+label = "💬"
+light_theme = "github-light"
+dark_theme = "photon-dark"
+lazy_loading = true

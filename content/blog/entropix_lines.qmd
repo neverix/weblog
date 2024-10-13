@@ -2,6 +2,8 @@
 title = "Peaks in next token distributions"
 date = 2024-10-13
 description = "An intuitive explanation"
+
+extra.utterances = true
 +++
 
 # Introduction
