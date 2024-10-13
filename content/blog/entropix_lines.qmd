@@ -126,7 +126,7 @@ from decimal import Decimal, getcontext
 
 plt.style.use("ggplot")
 getcontext().prec = 100
-k_values = [3, 5, 7, 9, 12, 24, 100, 1000, 10 ** 9, 10 ** 15, 10**24][:4]
+k_values = [3, 5, 7, 9, 12, 24, 100, 1000, 10 ** 9, 10 ** 15, 10**24]
 bs = int(1e2)
 
 for k in k_values:
