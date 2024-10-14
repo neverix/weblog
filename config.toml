@@ -22,7 +22,13 @@ highlight_theme = "css"
 
 [extra]
 # Put all your custom variables here
-
+allowed_domains = [
+    { directive = "font-src", domains = ["'self'", "data:"] },
+    { directive = "img-src", domains = ["'self'", "https://*", "data:"] },
+    { directive = "script-src", domains = ["'self'"] },
+    { directive = "style-src", domains = ["'self'"] },
+    { directive = "frame-src", domains = ["'self'"] },
+]
 
 skin = "lavender"
 override_serif_with_sans = true

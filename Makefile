@@ -12,7 +12,7 @@ all: quartos
 
 quartos: $(QMD_OUT_FILES)
 
-%.quarto.md: %.qmd
+%.quarto.md: %.qmd Makefile
 	quarto render $< --to hugo
 	mv $*.md $*.quarto.md
 	static_name=$(shell basename $*)_files; \
@@ -21,8 +21,12 @@ quartos: $(QMD_OUT_FILES)
 	cp -rf $*_files $$static_path; \
 	if [ "$(shell uname)" = "Darwin" ]; then \
 		sed -i "" -e "s/$$static_name/\/$$static_name/g" $@; \
+		sed -i "" -e 's/\\\[/\[/g' $@; \
+		sed -i "" -e 's/\\\]/\]/g' $@; \
 	else \
 		sed -i -e "s/$$static_name/\/$$static_name/g" $@; \
+		sed -i -e 's/\\\[/\[/g' $@; \
+		sed -i -e 's/\\\]/\]/g' $@; \
 	fi
 
 clean:
